@@ -1,0 +1,12 @@
+[Unit]
+Description=Restore ipset rules
+Before=network-pre.target iptables-restore.service netfilter-persistent.service
+Wants=network-pre.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'if [ -s /etc/ipset.conf ]; then /sbin/ipset restore -file /etc/ipset.conf; else echo "ipset-restore: /etc/ipset.conf non trovato o vuoto, skip."; fi'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
