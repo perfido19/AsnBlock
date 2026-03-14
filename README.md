@@ -11,7 +11,7 @@ Blocca automaticamente il traffico da interi ASN (Autonomous System Numbers) usa
 ## Installazione (one-liner)
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/TUOREPO/asn-block/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/perfido19/AsnBlock/main/install.sh)
 ```
 
 > ⚠️ Sostituisci `TUOREPO` con il tuo username GitHub.

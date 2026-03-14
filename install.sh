@@ -2,11 +2,11 @@
 # =============================================================
 # install.sh — ASN Block Installer
 # One-liner:
-#   bash <(curl -fsSL https://raw.githubusercontent.com/TUOREPO/asn-block/main/install.sh)
+#   bash <(curl -fsSL https://raw.githubusercontent.com/perfido19/AsnBlock/main/install.sh)
 # =============================================================
 set -euo pipefail
 
-REPO_URL="https://raw.githubusercontent.com/TUOREPO/asn-block/main"
+REPO_URL="https://raw.githubusercontent.com/perfido19/AsnBlock/main"
 MMDB="/usr/share/GeoIP/GeoLite2-ASN.mmdb"
 INSTALL_DIR="/usr/local/bin"
 ASN_FILE="/etc/asn-blocklist.txt"
