@@ -6,7 +6,7 @@
 # =============================================================
 set -euo pipefail
 
-REPO_URL="https://raw.githubusercontent.com/perfido19/AsnBlock/master"
+REPO_URL="https://raw.githubusercontent.com/perfido19/AsnBlock/main"
 MMDB="/usr/share/GeoIP/GeoLite2-ASN.mmdb"
 INSTALL_DIR="/usr/local/bin"
 ASN_FILE="/etc/asn-blocklist.txt"
