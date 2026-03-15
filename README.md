@@ -23,7 +23,7 @@ Blocco automatico di ASN tramite **ipset + iptables** usando il database **MaxMi
 ## Installazione / Aggiornamento (one-liner)
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/perfido19/AsnBlock/master/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/perfido19/AsnBlock/main/install.sh)
 ```
 
 Se già installato, lo stesso comando aggiorna tutto automaticamente.
