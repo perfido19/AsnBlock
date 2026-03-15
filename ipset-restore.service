@@ -5,8 +5,10 @@ Wants=network-pre.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -c 'if [ -s /etc/ipset.conf ]; then /sbin/ipset restore -file /etc/ipset.conf; else echo "ipset-restore: /etc/ipset.conf non trovato o vuoto, skip."; fi'
+ExecStart=/bin/bash -c 'if [ -s /etc/ipset.conf ]; then /sbin/ipset restore -exist -file /etc/ipset.conf; else echo "ipset-restore: /etc/ipset.conf non trovato o vuoto, skip."; fi'
 RemainAfterExit=yes
+# Non fallire se il file è assente
+SuccessExitStatus=0
 
 [Install]
 WantedBy=multi-user.target

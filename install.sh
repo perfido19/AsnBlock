@@ -102,7 +102,7 @@ def is_whitelisted(network_str):
 # ── Popola ipset ──────────────────────────────────────────
 count = 0
 proc  = subprocess.Popen(['ipset', 'restore', '-exist'], stdin=subprocess.PIPE, bufsize=1048576)
-buf   = []
+buf   = [f'create {tmpset} hash:net family inet maxelem 1048576 -exist\n']
 BATCH = 500
 
 with maxminddb.open_database(mmdb) as db:
@@ -461,8 +461,9 @@ Wants=network-pre.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -c 'if [ -s /etc/ipset.conf ]; then /sbin/ipset restore -exist -file /etc/ipset.conf; else echo "ipset-restore: skip."; fi'
+ExecStart=/bin/bash -c 'if [ -s /etc/ipset.conf ]; then /sbin/ipset restore -exist -file /etc/ipset.conf; else echo "ipset-restore: /etc/ipset.conf non trovato o vuoto, skip."; fi'
 RemainAfterExit=yes
+# Non fallire se il file è assente
 SuccessExitStatus=0
 
 [Install]
@@ -487,6 +488,7 @@ WantedBy=multi-user.target
 
 WATCHERSVCEOF
 
+# Whitelist: crea solo se non esiste (preserva personalizzazioni)
 if [[ ! -f /etc/asn-whitelist-nets.txt ]]; then
     echo "[INFO]  Creo /etc/asn-whitelist-nets.txt..."
     cat > /etc/asn-whitelist-nets.txt << 'WLEOF'
@@ -516,6 +518,7 @@ else
     echo "[~]     /etc/asn-whitelist-nets.txt già presente, mantenuto"
 fi
 
+# ASN list: crea solo se non esiste (preserva personalizzazioni)
 if [[ ! -f /etc/asn-blocklist.txt ]]; then
     echo "[INFO]  Creo /etc/asn-blocklist.txt..."
     cat > /etc/asn-blocklist.txt << 'ASNEOF'
@@ -1769,7 +1772,6 @@ if [[ "$ALREADY_INSTALLED" == "false" ]]; then
 else
     echo "[INFO]  Aggiornamento: verifico cron e regole iptables..."
 
-    # Assicura cron
     if ! crontab -l 2>/dev/null | grep -q 'update-asn-block'; then
         ( crontab -l 2>/dev/null; \
           echo '0 */6 * * * nice -n 19 ionice -c 3 /usr/local/bin/update-asn-block.sh >> /var/log/update-asn-block.log 2>&1' \
@@ -1779,7 +1781,7 @@ else
         echo "[~]     Cron già presente"
     fi
 
-    # Assicura regola LOG (potrebbe mancare su installazioni vecchie)
+    # Assicura regola LOG
     if ! iptables -C INPUT -m set --match-set blocked_asn src -j LOG 2>/dev/null; then
         iptables -D INPUT -m set --match-set blocked_asn src -j DROP 2>/dev/null || true
         iptables -I INPUT 1 -m set --match-set blocked_asn src \

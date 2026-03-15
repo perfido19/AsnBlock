@@ -61,7 +61,7 @@ def is_whitelisted(network_str):
 # ── Popola ipset ──────────────────────────────────────────
 count = 0
 proc  = subprocess.Popen(['ipset', 'restore', '-exist'], stdin=subprocess.PIPE, bufsize=1048576)
-buf   = []
+buf   = [f'create {tmpset} hash:net family inet maxelem 1048576 -exist\n']
 BATCH = 500
 
 with maxminddb.open_database(mmdb) as db:
