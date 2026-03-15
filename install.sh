@@ -101,8 +101,8 @@ def is_whitelisted(network_str):
 
 # ── Popola ipset ──────────────────────────────────────────
 count = 0
-proc  = subprocess.Popen(['ipset', 'restore'], stdin=subprocess.PIPE, bufsize=1048576)
-buf   = [f'flush {tmpset}\n']
+proc  = subprocess.Popen(['ipset', 'restore', '-exist'], stdin=subprocess.PIPE, bufsize=1048576)
+buf   = []
 BATCH = 500
 
 with maxminddb.open_database(mmdb) as db:
@@ -183,9 +183,11 @@ fi
 
 # Flush e ricrea set temporaneo
 ipset destroy "$TMPSET" 2>/dev/null || true
-ipset create "$TMPSET" hash:net family inet maxelem 1048576
+ipset create "$TMPSET" hash:net family inet maxelem 1048576 -exist
+ipset flush "$TMPSET"
 
 # Popola (Python gestisce whitelist + risoluzione domini)
+ipset flush "$TMPSET"
 COUNT=$(python3 /usr/local/bin/asn-to-ipset.py "$TMPSET" "$MMDB" "${ASNS[@]}")
 echo "$LOG_TAG Prefissi trovati: $COUNT"
 
@@ -459,8 +461,9 @@ Wants=network-pre.target
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash -c 'if [ -s /etc/ipset.conf ]; then /sbin/ipset restore -file /etc/ipset.conf; else echo "ipset-restore: /etc/ipset.conf non trovato o vuoto, skip."; fi'
+ExecStart=/bin/bash -c 'if [ -s /etc/ipset.conf ]; then /sbin/ipset restore -exist -file /etc/ipset.conf; else echo "ipset-restore: skip."; fi'
 RemainAfterExit=yes
+SuccessExitStatus=0
 
 [Install]
 WantedBy=multi-user.target

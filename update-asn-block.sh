@@ -47,9 +47,11 @@ fi
 
 # Flush e ricrea set temporaneo
 ipset destroy "$TMPSET" 2>/dev/null || true
-ipset create "$TMPSET" hash:net family inet maxelem 1048576
+ipset create "$TMPSET" hash:net family inet maxelem 1048576 -exist
+ipset flush "$TMPSET"
 
 # Popola (Python gestisce whitelist + risoluzione domini)
+ipset flush "$TMPSET"
 COUNT=$(python3 /usr/local/bin/asn-to-ipset.py "$TMPSET" "$MMDB" "${ASNS[@]}")
 echo "$LOG_TAG Prefissi trovati: $COUNT"
 
