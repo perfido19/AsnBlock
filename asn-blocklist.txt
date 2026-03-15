@@ -1214,4 +1214,3 @@ AS198890     # Albanian Fiber Telecommunications SHPK
 AS199058     # Serva One Ltd
 AS141039     # PacketHub S.A.
 AS48832      # Jordanian mobile phone services Ltd
-AS16276      # OVH SAS
