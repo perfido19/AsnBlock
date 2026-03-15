@@ -1,0 +1,13 @@
+[Unit]
+Description=Aggiorna ipset blocked_asn quando cambia la whitelist
+After=network.target ipset-restore.service
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/apt-get install -y inotify-tools
+ExecStart=/usr/local/bin/whitelist-watcher.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

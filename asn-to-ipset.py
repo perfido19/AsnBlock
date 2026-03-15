@@ -1,16 +1,67 @@
 #!/usr/bin/env python3
 import sys
 import subprocess
+import ipaddress
+import socket
 import maxminddb
 
-tmpset = sys.argv[1]
-mmdb   = sys.argv[2]
-asns   = set(sys.argv[3:])
+tmpset         = sys.argv[1]
+mmdb           = sys.argv[2]
+asns           = set(sys.argv[3:])
+WHITELIST_FILE = "/etc/asn-whitelist-nets.txt"
 
+# ── Carica whitelist (prefissi + domini) ──────────────────
+whitelist = []
+
+def resolve_domain(domain):
+    """Risolve un dominio e restituisce lista di ipaddress.ip_network"""
+    nets = []
+    try:
+        infos = socket.getaddrinfo(domain, None)
+        for info in infos:
+            ip = info[4][0]
+            if ':' in ip:  # skip IPv6
+                continue
+            try:
+                nets.append(ipaddress.ip_network(ip + '/32', strict=False))
+            except ValueError:
+                pass
+    except (socket.gaierror, OSError):
+        pass
+    return nets
+
+try:
+    with open(WHITELIST_FILE) as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith('#'):
+                continue
+            entry = line.split('#')[0].strip()
+            if not entry:
+                continue
+            if entry.startswith('domain:'):
+                domain = entry[len('domain:'):].strip()
+                resolved = resolve_domain(domain)
+                whitelist.extend(resolved)
+            else:
+                try:
+                    whitelist.append(ipaddress.ip_network(entry, strict=False))
+                except ValueError:
+                    pass
+except FileNotFoundError:
+    pass
+
+def is_whitelisted(network_str):
+    try:
+        net = ipaddress.ip_network(network_str, strict=False)
+        return any(net.overlaps(w) for w in whitelist)
+    except ValueError:
+        return False
+
+# ── Popola ipset ──────────────────────────────────────────
 count = 0
-proc = subprocess.Popen(['ipset', 'restore'], stdin=subprocess.PIPE, bufsize=1048576)
-
-buf = [f'flush {tmpset}\n']
+proc  = subprocess.Popen(['ipset', 'restore'], stdin=subprocess.PIPE, bufsize=1048576)
+buf   = [f'flush {tmpset}\n']
 BATCH = 500
 
 with maxminddb.open_database(mmdb) as db:
@@ -21,7 +72,10 @@ with maxminddb.open_database(mmdb) as db:
             continue
         if ':' in str(network):
             continue
-        buf.append(f'add {tmpset} {network}\n')
+        net_str = str(network)
+        if is_whitelisted(net_str):
+            continue
+        buf.append(f'add {tmpset} {net_str}\n')
         count += 1
         if len(buf) >= BATCH:
             proc.stdin.write(''.join(buf).encode())
