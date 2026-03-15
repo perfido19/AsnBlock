@@ -27,7 +27,6 @@ else
     echo "[INFO]  Prima installazione"
 fi
 
-# Pacchetti
 echo "[INFO]  Verifico pacchetti..."
 apt-get update -qq
 apt-get install -y ipset iptables-persistent python3-pip inotify-tools
@@ -177,7 +176,7 @@ if [[ -n "$CURRENT_MAXELEM" ]] && [[ "$CURRENT_MAXELEM" -lt 1048576 ]]; then
     ipset destroy "$SET"
     ipset create "$SET" hash:net family inet maxelem 1048576
     iptables -I INPUT 1 -m set --match-set "$SET" src \
-        -j LOG --log-prefix "[ASN-BLOCK] " --log-level 4 --log-limit 10/min --log-burst 20
+        -m limit --limit 10/min --limit-burst 20 -j LOG --log-prefix "[ASN-BLOCK] " --log-level 4
     iptables -I INPUT 2 -m set --match-set "$SET" src -j DROP
     iptables-save > /etc/iptables/rules.v4
 fi
@@ -236,7 +235,7 @@ def parse_args():
 def load_asn_descriptions():
     descs = {}
     try:
-        with open(ASN_FILE) as f:
+        with open(ASN_FILE, encoding='utf-8', errors='replace') as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith('#'):
@@ -308,7 +307,8 @@ def parse_log_fast(log_file, since=None):
     except FileNotFoundError:
         print(f"ERRORE: file di log non trovato: {log_file}")
         print("Assicurati che il logging sia attivo:")
-        print("  iptables -I INPUT 1 -m set --match-set blocked_asn src -j LOG --log-prefix \"[ASN-BLOCK] \" --log-level 4 --log-limit 10/min")
+        print("  iptables -I INPUT 1 -m set --match-set blocked_asn src \\")
+        print("    -m limit --limit 10/min --limit-burst 20 -j LOG --log-prefix \"[ASN-BLOCK] \" --log-level 4")
         sys.exit(1)
 
     return ip_counts, total_lines
@@ -330,7 +330,8 @@ def main():
     if total_events == 0:
         print("\nNessun evento [ASN-BLOCK] trovato nel log.")
         print("Attiva il logging con:")
-        print('  iptables -I INPUT 1 -m set --match-set blocked_asn src -j LOG --log-prefix "[ASN-BLOCK] " --log-level 4 --log-limit 10/min')
+        print('  iptables -I INPUT 1 -m set --match-set blocked_asn src \\\n')
+        print('    -m limit --limit 10/min --limit-burst 20 -j LOG --log-prefix "[ASN-BLOCK] " --log-level 4')
         sys.exit(0)
 
     print(f"[*] {total_events} eventi trovati da {len(ip_counts)} IP univoci", flush=True)
@@ -483,7 +484,6 @@ WantedBy=multi-user.target
 
 WATCHERSVCEOF
 
-# Whitelist: crea solo se non esiste (preserva personalizzazioni)
 if [[ ! -f /etc/asn-whitelist-nets.txt ]]; then
     echo "[INFO]  Creo /etc/asn-whitelist-nets.txt..."
     cat > /etc/asn-whitelist-nets.txt << 'WLEOF'
@@ -513,7 +513,6 @@ else
     echo "[~]     /etc/asn-whitelist-nets.txt già presente, mantenuto"
 fi
 
-# ASN list: crea solo se non esiste (preserva personalizzazioni)
 if [[ ! -f /etc/asn-blocklist.txt ]]; then
     echo "[INFO]  Creo /etc/asn-blocklist.txt..."
     cat > /etc/asn-blocklist.txt << 'ASNEOF'
@@ -1743,18 +1742,18 @@ fi
 echo "[OK]    File aggiornati"
 
 # ---------------------------------------------------------
-# CONFIGURAZIONE — prima installazione
+# PRIMA INSTALLAZIONE
 # ---------------------------------------------------------
 if [[ "$ALREADY_INSTALLED" == "false" ]]; then
-    echo "[INFO]  Prima installazione: configuro ipset e iptables..."
+    echo "[INFO]  Configuro ipset e iptables..."
 
     ipset create blocked_asn hash:net family inet maxelem 1048576 -exist
 
     iptables -D INPUT -m set --match-set blocked_asn src -j DROP 2>/dev/null || true
     iptables -D INPUT -m set --match-set blocked_asn src -j LOG  2>/dev/null || true
     iptables -I INPUT 1 -m set --match-set blocked_asn src \
-        -j LOG --log-prefix "[ASN-BLOCK] " --log-level 4 \
-        --log-limit 10/min --log-burst 20
+        -m limit --limit 10/min --limit-burst 20 \
+        -j LOG --log-prefix "[ASN-BLOCK] " --log-level 4
     iptables -I INPUT 2 -m set --match-set blocked_asn src -j DROP
     iptables-save > /etc/iptables/rules.v4
     echo "[OK]    Regole iptables: LOG pos.1 + DROP pos.2"
@@ -1765,7 +1764,9 @@ if [[ "$ALREADY_INSTALLED" == "false" ]]; then
     ) | crontab -
     echo "[OK]    Cron configurato"
 else
-    echo "[INFO]  Aggiornamento: verifico cron..."
+    echo "[INFO]  Aggiornamento: verifico cron e regole iptables..."
+
+    # Assicura cron
     if ! crontab -l 2>/dev/null | grep -q 'update-asn-block'; then
         ( crontab -l 2>/dev/null; \
           echo '0 */6 * * * nice -n 19 ionice -c 3 /usr/local/bin/update-asn-block.sh >> /var/log/update-asn-block.log 2>&1' \
@@ -1774,30 +1775,41 @@ else
     else
         echo "[~]     Cron già presente"
     fi
+
+    # Assicura regola LOG (potrebbe mancare su installazioni vecchie)
+    if ! iptables -C INPUT -m set --match-set blocked_asn src -j LOG 2>/dev/null; then
+        iptables -D INPUT -m set --match-set blocked_asn src -j DROP 2>/dev/null || true
+        iptables -I INPUT 1 -m set --match-set blocked_asn src \
+        -m limit --limit 10/min --limit-burst 20 \
+        -j LOG --log-prefix "[ASN-BLOCK] " --log-level 4
+        iptables -I INPUT 2 -m set --match-set blocked_asn src -j DROP
+        iptables-save > /etc/iptables/rules.v4
+        echo "[OK]    Regola LOG aggiunta"
+    else
+        echo "[~]     Regola LOG già presente"
+    fi
 fi
 
 # ---------------------------------------------------------
-# SYSTEMD — abilita/riavvia tutti i servizi
+# SYSTEMD
 # ---------------------------------------------------------
 echo "[INFO]  Configuro servizi systemd..."
 systemctl daemon-reload
-
 systemctl enable ipset-restore.service
 systemctl restart ipset-restore.service 2>/dev/null || systemctl start ipset-restore.service
 echo "[OK]    ipset-restore.service attivo"
-
 systemctl enable whitelist-watcher.service
 systemctl restart whitelist-watcher.service 2>/dev/null || systemctl start whitelist-watcher.service
 echo "[OK]    whitelist-watcher.service attivo"
 
 # ---------------------------------------------------------
-# AGGIORNAMENTO SET (sempre)
+# AGGIORNAMENTO SET
 # ---------------------------------------------------------
-echo "[INFO]  Aggiorno set ipset (include risoluzione domini whitelist)..."
+echo "[INFO]  Aggiorno set ipset..."
 /usr/local/bin/update-asn-block.sh
 
 # ---------------------------------------------------------
-# RIEPILOGO FINALE
+# RIEPILOGO
 # ---------------------------------------------------------
 echo ""
 echo "╔══════════════════════════════════════╗"
@@ -1823,7 +1835,6 @@ echo "  Watcher whitelist attivo — il set si aggiorna automaticamente"
 echo "  appena modifichi /etc/asn-whitelist-nets.txt"
 echo ""
 echo "  Esempi aggiunta whitelist:"
-echo "    echo 'domain:esempio.com  # descrizione' >> /etc/asn-whitelist-nets.txt"
-echo "    echo '1.2.3.0/24  # descrizione'         >> /etc/asn-whitelist-nets.txt"
-echo "  (il set si aggiorna da solo entro pochi secondi)"
+echo "    echo 'domain:esempio.com  # desc' >> /etc/asn-whitelist-nets.txt"
+echo "    echo '1.2.3.0/24  # desc'         >> /etc/asn-whitelist-nets.txt"
 echo ""

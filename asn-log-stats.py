@@ -29,7 +29,7 @@ def parse_args():
 def load_asn_descriptions():
     descs = {}
     try:
-        with open(ASN_FILE) as f:
+        with open(ASN_FILE, encoding='utf-8', errors='replace') as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith('#'):
@@ -101,7 +101,8 @@ def parse_log_fast(log_file, since=None):
     except FileNotFoundError:
         print(f"ERRORE: file di log non trovato: {log_file}")
         print("Assicurati che il logging sia attivo:")
-        print("  iptables -I INPUT 1 -m set --match-set blocked_asn src -j LOG --log-prefix \"[ASN-BLOCK] \" --log-level 4 --log-limit 10/min")
+        print("  iptables -I INPUT 1 -m set --match-set blocked_asn src \\")
+        print("    -m limit --limit 10/min --limit-burst 20 -j LOG --log-prefix \"[ASN-BLOCK] \" --log-level 4")
         sys.exit(1)
 
     return ip_counts, total_lines
@@ -123,7 +124,8 @@ def main():
     if total_events == 0:
         print("\nNessun evento [ASN-BLOCK] trovato nel log.")
         print("Attiva il logging con:")
-        print('  iptables -I INPUT 1 -m set --match-set blocked_asn src -j LOG --log-prefix "[ASN-BLOCK] " --log-level 4 --log-limit 10/min')
+        print('  iptables -I INPUT 1 -m set --match-set blocked_asn src \\\n')
+        print('    -m limit --limit 10/min --limit-burst 20 -j LOG --log-prefix "[ASN-BLOCK] " --log-level 4')
         sys.exit(0)
 
     print(f"[*] {total_events} eventi trovati da {len(ip_counts)} IP univoci", flush=True)
