@@ -40,36 +40,28 @@ echo "[INFO]  Aggiorno file di sistema..."
 
 cat > /usr/local/bin/asn-to-ipset.py << 'PYEOF'
 #!/usr/bin/env python3
-import sys
-import subprocess
-import ipaddress
-import socket
-import maxminddb
+import sys, subprocess, ipaddress, socket, maxminddb
 
 tmpset         = sys.argv[1]
 mmdb           = sys.argv[2]
 asns           = set(sys.argv[3:])
 WHITELIST_FILE = "/etc/asn-whitelist-nets.txt"
 
-# ── Carica whitelist (prefissi + domini) ──────────────────
-whitelist = []
-
 def resolve_domain(domain):
-    """Risolve un dominio e restituisce lista di ipaddress.ip_network"""
+    """Risolve un dominio e restituisce lista di ip_network /32"""
     nets = []
     try:
-        infos = socket.getaddrinfo(domain, None)
-        for info in infos:
+        for info in socket.getaddrinfo(domain, None):
             ip = info[4][0]
-            if ':' in ip:  # skip IPv6
-                continue
-            try:
+            if ':' not in ip:
                 nets.append(ipaddress.ip_network(ip + '/32', strict=False))
-            except ValueError:
-                pass
-    except (socket.gaierror, OSError):
+    except Exception:
         pass
     return nets
+
+# Carica whitelist
+whitelist = []
+wildcard_suffixes = []  # domini wildcard es: .relay.netbird.io
 
 try:
     with open(WHITELIST_FILE) as f:
@@ -82,8 +74,11 @@ try:
                 continue
             if entry.startswith('domain:'):
                 domain = entry[len('domain:'):].strip()
-                resolved = resolve_domain(domain)
-                whitelist.extend(resolved)
+                if domain.startswith('*.'):
+                    # Wildcard: salva il suffisso per match futuro
+                    wildcard_suffixes.append(domain[2:])
+                else:
+                    whitelist.extend(resolve_domain(domain))
             else:
                 try:
                     whitelist.append(ipaddress.ip_network(entry, strict=False))
@@ -99,7 +94,7 @@ def is_whitelisted(network_str):
     except ValueError:
         return False
 
-# ── Popola ipset ──────────────────────────────────────────
+# Popola ipset
 count = 0
 proc  = subprocess.Popen(['ipset', 'restore', '-exist'], stdin=subprocess.PIPE, bufsize=1048576)
 buf   = [f'create {tmpset} hash:net family inet maxelem 1048576 -exist\n']
@@ -453,6 +448,64 @@ done
 WATCHEREOF
 chmod +x /usr/local/bin/whitelist-watcher.sh
 
+cat > /usr/local/bin/update-lists.sh << 'UPDATELISTSEOF'
+#!/usr/bin/env bash
+# =============================================================
+# update-lists.sh
+# Scarica da GitHub le liste aggiornate (ASN + whitelist)
+# senza toccare la configurazione esistente
+# Uso: bash /usr/local/bin/update-lists.sh
+# =============================================================
+set -euo pipefail
+
+REPO="https://raw.githubusercontent.com/perfido19/AsnBlock/master"
+ASN_FILE="/etc/asn-blocklist.txt"
+WL_FILE="/etc/asn-whitelist-nets.txt"
+LOG_TAG="[update-lists]"
+
+echo "$LOG_TAG Scarico liste aggiornate da GitHub..."
+
+# Backup prima di sovrascrivere
+cp "$ASN_FILE" "${ASN_FILE}.bak" 2>/dev/null || true
+cp "$WL_FILE"  "${WL_FILE}.bak"  2>/dev/null || true
+
+# Scarica ASN list
+if curl -fsSL "$REPO/asn-blocklist.txt" -o "${ASN_FILE}.new"; then
+    # Verifica che il file scaricato sia valido (almeno 100 righe)
+    LINES=$(wc -l < "${ASN_FILE}.new")
+    if [[ "$LINES" -gt 100 ]]; then
+        mv "${ASN_FILE}.new" "$ASN_FILE"
+        echo "$LOG_TAG asn-blocklist.txt aggiornato ($LINES righe)"
+    else
+        rm -f "${ASN_FILE}.new"
+        echo "$LOG_TAG ERRORE: file ASN scaricato sembra vuoto/corrotto, mantenuto originale" >&2
+    fi
+else
+    echo "$LOG_TAG ERRORE: download asn-blocklist.txt fallito" >&2
+fi
+
+# Scarica whitelist
+if curl -fsSL "$REPO/asn-whitelist-nets.txt" -o "${WL_FILE}.new"; then
+    LINES=$(wc -l < "${WL_FILE}.new")
+    if [[ "$LINES" -gt 5 ]]; then
+        mv "${WL_FILE}.new" "$WL_FILE"
+        echo "$LOG_TAG asn-whitelist-nets.txt aggiornato ($LINES righe)"
+    else
+        rm -f "${WL_FILE}.new"
+        echo "$LOG_TAG ERRORE: whitelist scaricata sembra vuota/corrotta, mantenuta originale" >&2
+    fi
+else
+    echo "$LOG_TAG ERRORE: download asn-whitelist-nets.txt fallito" >&2
+fi
+
+echo "$LOG_TAG Aggiorno set ipset con le nuove liste..."
+/usr/local/bin/update-asn-block.sh
+
+echo "$LOG_TAG Completato"
+
+UPDATELISTSEOF
+chmod +x /usr/local/bin/update-lists.sh
+
 cat > /etc/systemd/system/ipset-restore.service << 'SVCEOF'
 [Unit]
 Description=Restore ipset rules
@@ -488,7 +541,7 @@ WantedBy=multi-user.target
 
 WATCHERSVCEOF
 
-# Whitelist: crea solo se non esiste (preserva personalizzazioni)
+# Whitelist: crea solo se non esiste
 if [[ ! -f /etc/asn-whitelist-nets.txt ]]; then
     echo "[INFO]  Creo /etc/asn-whitelist-nets.txt..."
     cat > /etc/asn-whitelist-nets.txt << 'WLEOF'
@@ -496,19 +549,28 @@ if [[ ! -f /etc/asn-whitelist-nets.txt ]]; then
 # Whitelist prefissi e domini da NON bloccare mai
 # =============================================================
 # Formato prefisso:  1.2.3.0/24        # descrizione
-# Formato dominio:   domain:example.com # descrizione
+# Formato dominio:   domain:esempio.com # descrizione
 #
 # I domini vengono risolti dinamicamente ad ogni aggiornamento
-# e i loro IP vengono esclusi dal blocco automaticamente
+# I prefissi CIDR sono statici
 # =============================================================
 
-# --- Netbird (rete mesh) ---
-85.9.200.0/21          # UpCloud - server Netbird (api, signal, relay)
-domain:api.netbird.io  # Netbird API server
-domain:signal.netbird.io # Netbird signal server
-domain:relay.netbird.io  # Netbird relay server
+# =============================================================
+# Whitelist NetBird (rete mesh)
+# =============================================================
+# Prefissi IP principali
+85.9.200.0/21          # UpCloud - server NetBird (API, Signal, Relay)
+# Domini principali da non bloccare
+domain:api.netbird.io          # NetBird API server
+domain:signal.netbird.io       # NetBird Signal server
+domain:relay.netbird.io        # NetBird relay server
+domain:management.netbird.io   # NetBird Management
+domain:stun.netbird.io         # STUN server
+domain:turn.netbird.io         # TURN server
 
-# --- Aggiungi qui altri prefissi o domini da escludere ---
+# =============================================================
+# Aggiungi qui altri prefissi o domini da escludere
+# =============================================================
 # Esempi:
 # 192.168.0.0/16       # Rete locale
 # domain:miodominio.com # Mio server
@@ -518,7 +580,7 @@ else
     echo "[~]     /etc/asn-whitelist-nets.txt già presente, mantenuto"
 fi
 
-# ASN list: crea solo se non esiste (preserva personalizzazioni)
+# ASN list: crea solo se non esiste
 if [[ ! -f /etc/asn-blocklist.txt ]]; then
     echo "[INFO]  Creo /etc/asn-blocklist.txt..."
     cat > /etc/asn-blocklist.txt << 'ASNEOF'
@@ -534,19 +596,18 @@ AS8068       # Microsoft Corporation 2
 AS8069       # Microsoft Corporation 3
 AS8070       # Microsoft Corporation 4
 AS12076      # Microsoft Corporation 5
-AS58862      # Microsoft (China) Co., Ltd
+AS16550      # Google LLC
+AS19527      # Google LLC 1
+AS36384      # Google LLC 2
+AS36385      # Google LLC 3
+AS395973     # Google LLC 4
+AS36040      # Google LLC 5
 AS37963      # Hangzhou Alibaba Advertising Co.,Ltd.
 AS9318       # SK Broadband Co Ltd KOREA
 AS55990      # Huawei Cloud Service data center CHINA
 AS1239       # SPRINTLINK USA
 AS45102      # Alibaba US Technology Co., Ltd.
 AS6327       # SHAW Canada
-AS16509      # AMAZON-02
-AS7224       # Amazon.com, Inc.
-AS19047      # Amazon.com, Inc.1
-AS8987       # Amazon Data Services Ireland Ltd
-AS14618      # Amazon.com
-AS62785      # Amazon.com Services LLC
 AS4134       # Chinanet
 AS45609      # Bharti Airtel Ltd. for GPRS Service
 AS4837       # China_Unicom
@@ -570,15 +631,6 @@ AS4181       # TDS-
 AS35142      # Better Linx Ltd
 AS26288      # KNET-1
 AS9299       # Philippine Long Distance Telephone Company
-AS15169      # GOOGLE
-AS16550      # Google LLC
-AS19527      # Google LLC 1
-AS36384      # Google LLC 2
-AS36385      # Google LLC 3
-AS395973     # Google LLC 4
-AS36040      # Google LLC 5
-AS36492      # GOOGLEWIFI
-AS396982     # GOOGLE-CLOUD-PLATFORM
 AS139190     # Google Asia Pacific Pte. Ltd.
 AS139070     # Google Asia Pacific Pte. Ltd.
 AS16591      # GOOGLE-FIBER
@@ -636,7 +688,6 @@ AS202306     # Hostglobal.plus Ltd
 AS9119       # SOFTNET d.o.o.
 AS53667      # PONYNET
 AS210228     # Web Hosted Group Ltd
-AS63949      # Akamai Technologies, Inc.
 AS6939       # HURRICANE
 AS14061      # DIGITALOCEAN-ASN
 AS62567      # DIGITALOCEAN-ASN1
@@ -654,7 +705,6 @@ AS8048       # CANTV Servicios, Venezuela
 AS20115      # CHARTER-20115
 AS7018       # ATT-INTERNET4
 AS22773      # ASN-CXA-ALL-CCI-22773-RDC
-AS20940      # Akamai International B.V.
 AS4788       # TM Net, Internet Service Provider
 AS395954     # LEASEWEB-USA-LAX
 AS10796      # WC-10796-MIDWEST
@@ -1241,7 +1291,6 @@ AS38203      # ADN Telecom Ltd.
 AS140061     # Qinghai Telecom
 AS45650      # Vianet Communications Pvt. Ltd.
 AS61432      # Tov Vaiz Partner
-AS13335      # CLOUDFLARENET
 AS15895      # Kyivstar PJSC
 AS31263      # Mynet S.r.l.
 AS32934      # FACEBOOK
@@ -1497,7 +1546,6 @@ AS214503     # QuxLabs AB
 AS53240      # Net Onze Provedor de Acesso a Internet Eireli
 AS28220      # Alares Cabo Servicos de Telecomunicacoes S.A.
 AS48452      # Traffic Broadband Communications Ltd.
-AS50360      # Tamatiya EOOD
 AS212219     # Hosting Dunyam Bilisim Teknolojileri
 AS48675      # Diananet LLC
 AS214623     # 2644819 Ontario Inc
@@ -1574,7 +1622,7 @@ AS41843      # JSC ER-Telecom Holding
 AS6871       # Plusnet
 AS38466      # U Mobile Sdn Bhd
 AS35819      # Etihad Etisalat, a joint stock company
-AS264541     # NET SET TELECOMUNIÇÕES LTDA - ME
+AS264541     # NET SET TELECOMUNICAÇÕES LTDA - ME
 AS262462     # Aranet Play
 AS4775       # Globe Telecoms
 AS263648     # PONTOCOMNET SERVIÇOS DE INTERNET LTDA
@@ -1631,7 +1679,7 @@ AS61308      # PVONET LTD
 AS210616     # SM Ltd.
 AS135872     # GTPL KCBPL BROADBAND PVT LTD
 AS268661     # INFRANET FIBRA
-AS269338     # jato net telecomunicaçoes ltda
+AS269338     # jato net telecomunicacoes ltda
 AS262773     # PROXXIMA TELECOMUNICACOES SA
 AS61716      # Rede Tupiniquim de Comunicação Ltda - ME
 AS265960     # FNETCOM TELECOMUNICACAO E INFORMATICA LTDA
@@ -1652,7 +1700,6 @@ AS142578     # E-Large (HongKong)
 AS147019     # jiii
 AS57363      # CDNvideo LLC
 AS204720     # GLOBAL CLOUD NETWORK LLC
-AS202053     # UpCloud Ltd
 AS9930       # TTNET-MY
 AS62103      # AirLink Ltd.
 AS35807      # SkyNet Ltd.
@@ -1738,7 +1785,6 @@ AS198890     # Albanian Fiber Telecommunications SHPK
 AS199058     # Serva One Ltd
 AS141039     # PacketHub S.A.
 AS48832      # Jordanian mobile phone services Ltd
-AS16276      # OVH SAS
 
 ASNEOF
 else
@@ -1752,9 +1798,7 @@ echo "[OK]    File aggiornati"
 # ---------------------------------------------------------
 if [[ "$ALREADY_INSTALLED" == "false" ]]; then
     echo "[INFO]  Configuro ipset e iptables..."
-
     ipset create blocked_asn hash:net family inet maxelem 1048576 -exist
-
     iptables -D INPUT -m set --match-set blocked_asn src -j DROP 2>/dev/null || true
     iptables -D INPUT -m set --match-set blocked_asn src -j LOG  2>/dev/null || true
     iptables -I INPUT 1 -m set --match-set blocked_asn src \
@@ -1763,7 +1807,6 @@ if [[ "$ALREADY_INSTALLED" == "false" ]]; then
     iptables -I INPUT 2 -m set --match-set blocked_asn src -j DROP
     iptables-save > /etc/iptables/rules.v4
     echo "[OK]    Regole iptables: LOG pos.1 + DROP pos.2"
-
     echo "[INFO]  Configuro cron ogni 6 ore..."
     ( crontab -l 2>/dev/null | grep -v 'update-asn-block'; \
       echo '0 */6 * * * nice -n 19 ionice -c 3 /usr/local/bin/update-asn-block.sh >> /var/log/update-asn-block.log 2>&1' \
@@ -1771,7 +1814,6 @@ if [[ "$ALREADY_INSTALLED" == "false" ]]; then
     echo "[OK]    Cron configurato"
 else
     echo "[INFO]  Aggiornamento: verifico cron e regole iptables..."
-
     if ! crontab -l 2>/dev/null | grep -q 'update-asn-block'; then
         ( crontab -l 2>/dev/null; \
           echo '0 */6 * * * nice -n 19 ionice -c 3 /usr/local/bin/update-asn-block.sh >> /var/log/update-asn-block.log 2>&1' \
@@ -1780,8 +1822,6 @@ else
     else
         echo "[~]     Cron già presente"
     fi
-
-    # Assicura regola LOG
     if ! iptables -C INPUT -m set --match-set blocked_asn src -j LOG 2>/dev/null; then
         iptables -D INPUT -m set --match-set blocked_asn src -j DROP 2>/dev/null || true
         iptables -I INPUT 1 -m set --match-set blocked_asn src \
@@ -1831,6 +1871,7 @@ COUNT=$(ipset list blocked_asn | grep -c '/' || true)
 echo "  Prefissi bloccati: $COUNT"
 echo ""
 echo "  Aggiornamento manuale:  /usr/local/bin/update-asn-block.sh"
+echo "  Aggiorna liste GitHub:  /usr/local/bin/update-lists.sh"
 echo "  Statistiche per ASN:    python3 /usr/local/bin/asn-log-stats.py"
 echo "  Whitelist prefissi:     /etc/asn-whitelist-nets.txt"
 echo "  Lista ASN bloccati:     /etc/asn-blocklist.txt"
@@ -1839,7 +1880,6 @@ echo ""
 echo "  Watcher whitelist attivo — il set si aggiorna automaticamente"
 echo "  appena modifichi /etc/asn-whitelist-nets.txt"
 echo ""
-echo "  Esempi aggiunta whitelist:"
-echo "    echo 'domain:esempio.com  # desc' >> /etc/asn-whitelist-nets.txt"
-echo "    echo '1.2.3.0/24  # desc'         >> /etc/asn-whitelist-nets.txt"
+echo "  Per aggiornare liste da GitHub su VPS già installati:"
+echo "    /usr/local/bin/update-lists.sh"
 echo ""

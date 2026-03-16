@@ -10,19 +10,18 @@ AS8068       # Microsoft Corporation 2
 AS8069       # Microsoft Corporation 3
 AS8070       # Microsoft Corporation 4
 AS12076      # Microsoft Corporation 5
-AS58862      # Microsoft (China) Co., Ltd
+AS16550      # Google LLC
+AS19527      # Google LLC 1
+AS36384      # Google LLC 2
+AS36385      # Google LLC 3
+AS395973     # Google LLC 4
+AS36040      # Google LLC 5
 AS37963      # Hangzhou Alibaba Advertising Co.,Ltd.
 AS9318       # SK Broadband Co Ltd KOREA
 AS55990      # Huawei Cloud Service data center CHINA
 AS1239       # SPRINTLINK USA
 AS45102      # Alibaba US Technology Co., Ltd.
 AS6327       # SHAW Canada
-AS16509      # AMAZON-02
-AS7224       # Amazon.com, Inc.
-AS19047      # Amazon.com, Inc.1
-AS8987       # Amazon Data Services Ireland Ltd
-AS14618      # Amazon.com
-AS62785      # Amazon.com Services LLC
 AS4134       # Chinanet
 AS45609      # Bharti Airtel Ltd. for GPRS Service
 AS4837       # China_Unicom
@@ -46,15 +45,6 @@ AS4181       # TDS-
 AS35142      # Better Linx Ltd
 AS26288      # KNET-1
 AS9299       # Philippine Long Distance Telephone Company
-AS15169      # GOOGLE
-AS16550      # Google LLC
-AS19527      # Google LLC 1
-AS36384      # Google LLC 2
-AS36385      # Google LLC 3
-AS395973     # Google LLC 4
-AS36040      # Google LLC 5
-AS36492      # GOOGLEWIFI
-AS396982     # GOOGLE-CLOUD-PLATFORM
 AS139190     # Google Asia Pacific Pte. Ltd.
 AS139070     # Google Asia Pacific Pte. Ltd.
 AS16591      # GOOGLE-FIBER
@@ -112,7 +102,6 @@ AS202306     # Hostglobal.plus Ltd
 AS9119       # SOFTNET d.o.o.
 AS53667      # PONYNET
 AS210228     # Web Hosted Group Ltd
-AS63949      # Akamai Technologies, Inc.
 AS6939       # HURRICANE
 AS14061      # DIGITALOCEAN-ASN
 AS62567      # DIGITALOCEAN-ASN1
@@ -130,7 +119,6 @@ AS8048       # CANTV Servicios, Venezuela
 AS20115      # CHARTER-20115
 AS7018       # ATT-INTERNET4
 AS22773      # ASN-CXA-ALL-CCI-22773-RDC
-AS20940      # Akamai International B.V.
 AS4788       # TM Net, Internet Service Provider
 AS395954     # LEASEWEB-USA-LAX
 AS10796      # WC-10796-MIDWEST
@@ -717,7 +705,6 @@ AS38203      # ADN Telecom Ltd.
 AS140061     # Qinghai Telecom
 AS45650      # Vianet Communications Pvt. Ltd.
 AS61432      # Tov Vaiz Partner
-AS13335      # CLOUDFLARENET
 AS15895      # Kyivstar PJSC
 AS31263      # Mynet S.r.l.
 AS32934      # FACEBOOK
@@ -973,7 +960,6 @@ AS214503     # QuxLabs AB
 AS53240      # Net Onze Provedor de Acesso a Internet Eireli
 AS28220      # Alares Cabo Servicos de Telecomunicacoes S.A.
 AS48452      # Traffic Broadband Communications Ltd.
-AS50360      # Tamatiya EOOD
 AS212219     # Hosting Dunyam Bilisim Teknolojileri
 AS48675      # Diananet LLC
 AS214623     # 2644819 Ontario Inc
@@ -1050,7 +1036,7 @@ AS41843      # JSC ER-Telecom Holding
 AS6871       # Plusnet
 AS38466      # U Mobile Sdn Bhd
 AS35819      # Etihad Etisalat, a joint stock company
-AS264541     # NET SET TELECOMUNIÇÕES LTDA - ME
+AS264541     # NET SET TELECOMUNICAÇÕES LTDA - ME
 AS262462     # Aranet Play
 AS4775       # Globe Telecoms
 AS263648     # PONTOCOMNET SERVIÇOS DE INTERNET LTDA
@@ -1107,7 +1093,7 @@ AS61308      # PVONET LTD
 AS210616     # SM Ltd.
 AS135872     # GTPL KCBPL BROADBAND PVT LTD
 AS268661     # INFRANET FIBRA
-AS269338     # jato net telecomunicaçoes ltda
+AS269338     # jato net telecomunicacoes ltda
 AS262773     # PROXXIMA TELECOMUNICACOES SA
 AS61716      # Rede Tupiniquim de Comunicação Ltda - ME
 AS265960     # FNETCOM TELECOMUNICACAO E INFORMATICA LTDA
@@ -1128,7 +1114,6 @@ AS142578     # E-Large (HongKong)
 AS147019     # jiii
 AS57363      # CDNvideo LLC
 AS204720     # GLOBAL CLOUD NETWORK LLC
-AS202053     # UpCloud Ltd
 AS9930       # TTNET-MY
 AS62103      # AirLink Ltd.
 AS35807      # SkyNet Ltd.
@@ -1214,4 +1199,3 @@ AS198890     # Albanian Fiber Telecommunications SHPK
 AS199058     # Serva One Ltd
 AS141039     # PacketHub S.A.
 AS48832      # Jordanian mobile phone services Ltd
-AS16276      # OVH SAS

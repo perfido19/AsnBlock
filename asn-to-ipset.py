@@ -1,34 +1,26 @@
 #!/usr/bin/env python3
-import sys
-import subprocess
-import ipaddress
-import socket
-import maxminddb
+import sys, subprocess, ipaddress, socket, maxminddb
 
 tmpset         = sys.argv[1]
 mmdb           = sys.argv[2]
 asns           = set(sys.argv[3:])
 WHITELIST_FILE = "/etc/asn-whitelist-nets.txt"
 
-# ── Carica whitelist (prefissi + domini) ──────────────────
-whitelist = []
-
 def resolve_domain(domain):
-    """Risolve un dominio e restituisce lista di ipaddress.ip_network"""
+    """Risolve un dominio e restituisce lista di ip_network /32"""
     nets = []
     try:
-        infos = socket.getaddrinfo(domain, None)
-        for info in infos:
+        for info in socket.getaddrinfo(domain, None):
             ip = info[4][0]
-            if ':' in ip:  # skip IPv6
-                continue
-            try:
+            if ':' not in ip:
                 nets.append(ipaddress.ip_network(ip + '/32', strict=False))
-            except ValueError:
-                pass
-    except (socket.gaierror, OSError):
+    except Exception:
         pass
     return nets
+
+# Carica whitelist
+whitelist = []
+wildcard_suffixes = []  # domini wildcard es: .relay.netbird.io
 
 try:
     with open(WHITELIST_FILE) as f:
@@ -41,8 +33,11 @@ try:
                 continue
             if entry.startswith('domain:'):
                 domain = entry[len('domain:'):].strip()
-                resolved = resolve_domain(domain)
-                whitelist.extend(resolved)
+                if domain.startswith('*.'):
+                    # Wildcard: salva il suffisso per match futuro
+                    wildcard_suffixes.append(domain[2:])
+                else:
+                    whitelist.extend(resolve_domain(domain))
             else:
                 try:
                     whitelist.append(ipaddress.ip_network(entry, strict=False))
@@ -58,7 +53,7 @@ def is_whitelisted(network_str):
     except ValueError:
         return False
 
-# ── Popola ipset ──────────────────────────────────────────
+# Popola ipset
 count = 0
 proc  = subprocess.Popen(['ipset', 'restore', '-exist'], stdin=subprocess.PIPE, bufsize=1048576)
 buf   = [f'create {tmpset} hash:net family inet maxelem 1048576 -exist\n']

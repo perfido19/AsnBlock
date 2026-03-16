@@ -2,19 +2,28 @@
 # Whitelist prefissi e domini da NON bloccare mai
 # =============================================================
 # Formato prefisso:  1.2.3.0/24        # descrizione
-# Formato dominio:   domain:example.com # descrizione
+# Formato dominio:   domain:esempio.com # descrizione
 #
 # I domini vengono risolti dinamicamente ad ogni aggiornamento
-# e i loro IP vengono esclusi dal blocco automaticamente
+# I prefissi CIDR sono statici
 # =============================================================
 
-# --- Netbird (rete mesh) ---
-85.9.200.0/21          # UpCloud - server Netbird (api, signal, relay)
-domain:api.netbird.io  # Netbird API server
-domain:signal.netbird.io # Netbird signal server
-domain:relay.netbird.io  # Netbird relay server
+# =============================================================
+# Whitelist NetBird (rete mesh)
+# =============================================================
+# Prefissi IP principali
+85.9.200.0/21          # UpCloud - server NetBird (API, Signal, Relay)
+# Domini principali da non bloccare
+domain:api.netbird.io          # NetBird API server
+domain:signal.netbird.io       # NetBird Signal server
+domain:relay.netbird.io        # NetBird relay server
+domain:management.netbird.io   # NetBird Management
+domain:stun.netbird.io         # STUN server
+domain:turn.netbird.io         # TURN server
 
-# --- Aggiungi qui altri prefissi o domini da escludere ---
+# =============================================================
+# Aggiungi qui altri prefissi o domini da escludere
+# =============================================================
 # Esempi:
 # 192.168.0.0/16       # Rete locale
 # domain:miodominio.com # Mio server
