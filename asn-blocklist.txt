@@ -10,12 +10,20 @@ AS8068       # Microsoft Corporation 2
 AS8069       # Microsoft Corporation 3
 AS8070       # Microsoft Corporation 4
 AS12076      # Microsoft Corporation 5
-AS16550      # Google LLC
-AS19527      # Google LLC 1
-AS36384      # Google LLC 2
-AS36385      # Google LLC 3
-AS395973     # Google LLC 4
-AS36040      # Google LLC 5
+AS16550 	   # Google LLC
+AS19527 	   # Google LLC 1
+AS36384 	   # Google LLC 2
+AS36385 	   # Google LLC 3
+AS395973 	   # Google LLC 4
+AS36040	     # Google LLC 5
+AS7224       # Amazon.com, Inc.
+AS19047      # Amazon.com, Inc.1
+AS8987       # Amazon Data Services Ireland Ltd
+AS14618	     # Amazon.com
+AS62785 	   # Amazon.com Services LLC
+AS16509	     # AMAZON-02
+AS50360      # Tamatiya EOOD
+AS13335      # CLOUDFLARENET
 AS37963      # Hangzhou Alibaba Advertising Co.,Ltd.
 AS9318       # SK Broadband Co Ltd KOREA
 AS55990      # Huawei Cloud Service data center CHINA
@@ -172,7 +180,6 @@ AS9924       # Taiwan Fixed Network
 AS9569       # SEOCHO CABLE SYSTEMS CO., LTD.
 AS4760       # HKT Limited
 AS57523      # Chang Way Technologies Co. Limited
-AS27699      # TELEFONICA BRASIL S.A
 AS131596     # TBC
 AS209588     # Flyservers S.A.
 AS209605     # UAB Host Baltic
@@ -459,6 +466,7 @@ AS27884      # CABLECOLOR S.A.
 AS4755       # TATA Communications
 AS197706     # Keminet SHPK
 AS36183      # AKAMAI AS
+AS63949      # Akamai Connected Cloud
 AS210154     # GIGALAN EM Ltd.
 AS48347      # JSC Mediasoft ekspert
 AS27895      # Nucleo S.A.
@@ -1036,7 +1044,7 @@ AS41843      # JSC ER-Telecom Holding
 AS6871       # Plusnet
 AS38466      # U Mobile Sdn Bhd
 AS35819      # Etihad Etisalat, a joint stock company
-AS264541     # NET SET TELECOMUNICAÇÕES LTDA - ME
+AS264541     # NET SET TELECOMUNIÇÕES LTDA - ME
 AS262462     # Aranet Play
 AS4775       # Globe Telecoms
 AS263648     # PONTOCOMNET SERVIÇOS DE INTERNET LTDA
@@ -1093,7 +1101,7 @@ AS61308      # PVONET LTD
 AS210616     # SM Ltd.
 AS135872     # GTPL KCBPL BROADBAND PVT LTD
 AS268661     # INFRANET FIBRA
-AS269338     # jato net telecomunicacoes ltda
+AS269338     # jato net telecomunicaçoes ltda
 AS262773     # PROXXIMA TELECOMUNICACOES SA
 AS61716      # Rede Tupiniquim de Comunicação Ltda - ME
 AS265960     # FNETCOM TELECOMUNICACAO E INFORMATICA LTDA
@@ -1199,3 +1207,6 @@ AS198890     # Albanian Fiber Telecommunications SHPK
 AS199058     # Serva One Ltd
 AS141039     # PacketHub S.A.
 AS48832      # Jordanian mobile phone services Ltd
+AS262210     # VIETTEL PERU S.A.C.
+AS8560       # IONOS SE
+AS8517       # National Academic Network and Information Center
