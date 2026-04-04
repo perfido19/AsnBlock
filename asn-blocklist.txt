@@ -10,17 +10,17 @@ AS8068       # Microsoft Corporation 2
 AS8069       # Microsoft Corporation 3
 AS8070       # Microsoft Corporation 4
 AS12076      # Microsoft Corporation 5
-AS16550 	   # Google LLC
-AS19527 	   # Google LLC 1
-AS36384 	   # Google LLC 2
-AS36385 	   # Google LLC 3
-AS395973 	   # Google LLC 4
+AS16550 	 # Google LLC
+AS19527 	 # Google LLC 1
+AS36384 	 # Google LLC 2
+AS36385 	 # Google LLC 3
+AS395973 	 # Google LLC 4
 AS36040	     # Google LLC 5
 AS7224       # Amazon.com, Inc.
 AS19047      # Amazon.com, Inc.1
 AS8987       # Amazon Data Services Ireland Ltd
 AS14618	     # Amazon.com
-AS62785 	   # Amazon.com Services LLC
+AS62785 	 # Amazon.com Services LLC
 AS16509	     # AMAZON-02
 AS50360      # Tamatiya EOOD
 AS13335      # CLOUDFLARENET
@@ -209,7 +209,6 @@ AS9198       # JSC Kazakhtelecom
 AS31898      # ORACLE-BMC
 AS9595       # NTT-ME Corporation
 AS23700      # Linknet-Fastnet ASN
-AS18881      # TELEFONICA BRASIL S.A
 AS49334      # Sh Online Iletisim Anonim Sirketi
 AS58879      # Shanghai Anchang Network Security Technology Co.,Ltd.
 AS142002     # Scloud Pte Ltd
@@ -836,7 +835,6 @@ AS25255      # Hutchison Drei Austria GmbH
 AS266475     # SEM FRONTEIRAS TELECOMUNICACOES LTDA
 AS26464      # JOYENT-INC
 AS61638      # Impactnet Telecomunicacoes LTDA
-AS26599      # TELEFONICA BRASIL S.A
 AS271069     # A4 TELECOM PROVEDOR DE ACESSO
 AS264588     # SKILLNET TELECOM - CE
 AS28126      # BRISANET SERVICOS DE TELECOMUNICACOES S.A
@@ -1024,7 +1022,6 @@ AS263744     # Udasha S.A.
 AS29194      # MTS PJSC
 AS35753      # ITC AS number
 AS265691     # WI-NET TELECOM S.A.C.
-AS51809      # BRSK Limited
 AS52485      # networksdelmanana.com
 AS61754      # I3 Telecomunicacoes - EIRELI
 AS52075      # Wifirst S.A.S.
@@ -1210,3 +1207,9 @@ AS48832      # Jordanian mobile phone services Ltd
 AS262210     # VIETTEL PERU S.A.C.
 AS8560       # IONOS SE
 AS8517       # National Academic Network and Information Center
+AS5603       # Telekom Slovenije, d.d.
+AS42580      # Nos Acores Comunicacoes, S.A.
+AS29695      # Lyse Tele AS
+AS208172     # Proton AG
+AS207088     # Adoard Global Reach LLC
+AS204060     # Amt Services srl
