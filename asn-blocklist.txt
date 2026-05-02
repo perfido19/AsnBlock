@@ -1213,3 +1213,58 @@ AS29695      # Lyse Tele AS
 AS208172     # Proton AG
 AS207088     # Adoard Global Reach LLC
 AS204060     # Amt Services srl
+AS210538     # KEYUBU Internet ve Bilisim Tic. Ltd. Sti.
+AS41564      # Orion Network Limited
+AS36994      # VODACOM
+AS45773      # PERN
+AS200730     # ISAIEV
+AS18229      # CtrlS
+AS140481     # PT Tonggak Teknologi Netikom
+AS41745      # IB Compute Systems Inc
+AS138968     # Sakura network limited
+AS42926      # Radore
+AS11014      # CPS
+AS6713       # Office National des Postes et Telecommunications ONPT (Maroc Telecom) / IAM
+AS215540     # Global Connectivity Solutions LLP
+AS140527     # Chinanet AH
+AS134768     # Chinanet SN
+AS151823     # Chinanet HN
+AS134760     # Chinanet HE
+AS137693     # Chinanet GX
+AS196854     # LLC Isatel Tajikistan
+AS266181     # Golden Link
+AS41564      # Fiber Grid
+AS28573      # NET Serviços de Comunicação S.A.
+AS139923     # Fastmos Co Limited
+AS8346       # SONATEL-AS Autonomous System
+AS55933      # Sakura Network Limited
+AS29226      # Mastertel
+AS13579      # Infotec Centro De Investigacion E Innovacion EN Tecnologias De LA Informacion Y Comunicacion
+AS60721      # Sahinnetwork Internet VE Bilisim Hizmetleri
+AS140641     # Yotta Network Services Private Limited
+AS58898      # Rainbow communications India Pvt Ltd
+AS328847     # NewIP 2ND
+AS55410      # Vodafone Idea Ltd
+AS8595       # LTD New Telephone Line
+AS215117     # HosterDaddy Private Limited
+AS43647      # Servercore CIS LLC
+AS153416     # DTDMVNCLOUD
+AS32098      # IP Matrix, S.A. de C.V
+AS17621      # Shanghai UCloud Information Technology Company Limited
+AS210785     # KAPELAN Medien GmbH
+AS401701     # ZenithCloud Systems Limited
+AS213877     # u1host ltd
+AS34224      # Neterra Ltd.
+AS208684     # Bha Conseil Sarl
+AS207388     # Bakker IT
+AS142019     # GZ REMITTANCE CHINA INDUSTRY LIMITED
+AS201401     # NewVM B.V.
+AS212512     # Detai Prosperous Technologies Limited
+ASAS208637   # 4 Vendeta Ltd
+AS215439     # PLAY2GO INTERNATIONAL LIMITED · Ace Data Centers II, LLC
+AS50188      # KOLNET Sp. z o.o.
+AS34534      # FBW NETWORKS SAS
+AS197450     # Sunucun Bilgi Iletisim Teknolojileri ve Ticaret Ltd. Sti.
+AS16347      # ADISTA SAS
+AS395965     # Carrytel
+AS32613      # Leaseweb Canada Inc.
